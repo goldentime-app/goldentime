@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                     val lon = here?.longitude ?: MEET_LON
                     hospitals.nearestAvailable(lat, lon)?.let { appState.erCandidate = it }
                     aeds.nearest(lat, lon)?.let { appState.nearestAed = it }
+                    android.util.Log.d("GtData", "er=${appState.erCandidate} aed=${appState.nearestAed}")
                 }
             }
         }
