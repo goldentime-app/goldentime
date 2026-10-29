@@ -1,0 +1,561 @@
+<title>골든타임 프로토타입</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a car head-unit (8:3) on the left, a "virtual console" for the demo on the right; stacks on phones.
+   Single committed dark look: an instrument-panel night palette. */
+:root{
+  color-scheme: dark;
+  --ground:#0b0e12;      /* page */
+  --dash:#0f1318;        /* head unit glass */
+  --panel:#171d24;       /* cards on the display */
+  --panel-2:#212a33;
+  --rule:#2b3540;
+  --ink:#eef2f5;
+  --ink-2:#9aa7b4;
+  --calm:#37c3a6;        /* everyday care */
+  --amber:#f0a83a;       /* caution */
+  --alarm:#e5484d;       /* emergency */
+  --alarm-ground:#160c0e;
+  --alarm-panel:#221316;
+  --route:#4c8df6;
+  --paper:#f3f5f7;       /* handover sheet */
+  --paper-ink:#141820;
+  --ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html,body{height:auto}
+[hidden]{display:none!important}
+body{background:var(--ground);color:var(--ink);font-family:var(--ui);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1480px;margin:0 auto;display:grid;gap:18px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.top h1{font-size:1.35rem;margin:0;letter-spacing:-.01em}
+.top p{margin:0;color:var(--ink-2);font-size:.92rem}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+@media (max-width:1100px){.stage{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- head unit ---------- */
+.unit{background:#05070a;border-radius:22px;padding:10px;box-shadow:0 0 0 1px #1b222a}
+.display{container-type:inline-size;aspect-ratio:8/3;max-width:100%;background:var(--dash);border-radius:14px;overflow:hidden;position:relative;transition:background .3s}
+.display.alarm{background:var(--alarm-ground)}
+.d{position:absolute;inset:0;font-size:1.25cqw;display:flex;flex-direction:column}
+.bar{height:3.4cqw;flex:none;display:flex;align-items:center;gap:1.2cqw;padding:0 1.8cqw;background:rgba(0,0,0,.35);font-size:1.15cqw}
+.bar b{font-weight:700;font-size:1.3cqw}
+.chip{padding:.18cqw .9cqw;border-radius:2cqw;font-weight:700;font-size:1cqw;color:#0b0e12;background:var(--calm)}
+.chip.amber{background:var(--amber)} .chip.alarm{background:var(--alarm);color:#fff}
+.bar .clock{margin-left:auto;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.body{flex:1;display:grid;gap:1.4cqw;padding:1.6cqw 1.8cqw;min-height:0}
+.card{background:var(--panel);border-radius:1.2cqw;padding:1.4cqw 1.6cqw;min-width:0;min-height:0;display:flex;flex-direction:column;gap:.7cqw}
+.alarm .card{background:var(--alarm-panel)}
+.card h3{margin:0;font-size:1.25cqw;color:var(--ink-2);font-weight:600}
+.big{font-size:2.1cqw;font-weight:700;line-height:1.25}
+.mid{font-size:1.55cqw;font-weight:600;line-height:1.3}
+.sub{color:var(--ink-2);font-size:1.2cqw;line-height:1.35}
+.calm{color:var(--calm)} .amb{color:var(--amber)} .red{color:var(--alarm)}
+.btn{font:inherit;border:0;border-radius:4cqw;padding:1cqw 2.2cqw;font-weight:700;font-size:1.6cqw;cursor:pointer;color:#fff;background:var(--alarm)}
+.btn.calm{background:var(--calm);color:#0b0e12} .btn.amb{background:var(--amber);color:#0b0e12} .btn.ghost{background:var(--panel-2);color:var(--ink)}
+.btn:focus-visible,.ctl button:focus-visible,.ctl input:focus-visible{outline:3px solid var(--route);outline-offset:2px}
+.row{display:flex;gap:1cqw;align-items:center;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:7cqw 1fr;gap:.55cqw 1.2cqw;font-size:1.5cqw}
+.kv dt{color:var(--ink-2)} .kv dd{margin:0;font-weight:700}
+.gauge{width:13cqw;height:13cqw;position:relative;align-self:center}
+.gauge svg{width:100%;height:100%}
+.gauge .n{position:absolute;inset:0;display:grid;place-items:center;font-size:3.6cqw;font-weight:700;font-variant-numeric:tabular-nums}
+.gauge .l{position:absolute;bottom:.4cqw;width:100%;text-align:center;font-size:1.05cqw;color:var(--ink-2)}
+.seat{display:grid;grid-template-columns:repeat(3,1fr);gap:.8cqw}
+.seat div{background:var(--panel-2);border-radius:1cqw;padding:1cqw;text-align:center;font-size:1.05cqw;color:var(--ink-2)}
+.seat i{display:block;width:1.3cqw;height:1.3cqw;border-radius:50%;background:#56616c;margin:0 auto .6cqw}
+.seat .on i{background:var(--calm)} .seat .on{color:var(--ink)}
+.emerg{background:#22101280;border:.25cqw solid var(--alarm);justify-content:center;align-items:center;text-align:center}
+.mic{width:9cqw;height:9cqw;border-radius:50%;background:var(--alarm);display:grid;place-items:center;box-shadow:0 0 0 2cqw #e5484d22,0 0 0 4cqw #e5484d12;animation:pulse 1.6s ease-in-out infinite}
+.mic svg{width:3.4cqw;height:3.4cqw}
+@keyframes pulse{50%{box-shadow:0 0 0 2.6cqw #e5484d2a,0 0 0 5cqw #e5484d10}}
+.chat{display:flex;flex-direction:column;gap:.9cqw;overflow:auto}
+.chat .who{font-size:1cqw;color:var(--ink-2)} .chat .say{font-size:1.55cqw;line-height:1.35}
+.chat .app .say{color:var(--alarm);font-weight:700}
+.opt{border:.2cqw solid transparent} .opt.rec{border-color:var(--calm)}
+.tag{align-self:flex-start;background:var(--calm);color:#0b0e12;font-weight:700;font-size:1cqw;padding:.15cqw .8cqw;border-radius:2cqw}
+.map{background:#121921;position:relative;overflow:hidden}
+.map canvas{position:absolute;inset:0;width:100%;height:100%}
+.sheet,.alarm .card.sheet{background:var(--paper);color:var(--paper-ink)}
+.sheet h3{color:#556}
+.timer{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.list{display:grid;gap:1cqw}
+.list .card{flex-direction:row;align-items:center;justify-content:space-between}
+.count{width:9cqw;height:9cqw;border-radius:50%;border:.7cqw solid var(--alarm);display:grid;place-items:center;font-size:4cqw;font-weight:700;color:var(--alarm);font-variant-numeric:tabular-nums}
+.toast{position:absolute;left:50%;bottom:1.6cqw;transform:translateX(-50%);background:rgba(10,13,17,.92);border:1px solid var(--rule);padding:.8cqw 1.6cqw;border-radius:3cqw;font-size:1.2cqw;max-width:80%;text-align:center}
+@media (prefers-reduced-motion:reduce){.mic{animation:none}}
+
+/* ---------- caption under the unit ---------- */
+.caption{display:flex;gap:12px;align-items:flex-start;margin-top:10px;padding:0 4px;color:var(--ink-2);font-size:.88rem;line-height:1.5}
+.caption .sid{font-family:var(--mono);color:var(--ink);background:var(--panel-2);padding:1px 8px;border-radius:6px;flex:none}
+
+/* ---------- virtual console ---------- */
+.ctl{background:#10151b;border:1px solid var(--rule);border-radius:16px;padding:16px;display:grid;gap:14px;min-width:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:.85rem;background:transparent;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#0b0e12;border-color:var(--ink)}
+.ctl h2{font-size:.78rem;letter-spacing:.06em;color:var(--ink-2);margin:0;font-weight:600}
+.ctl .grp{display:grid;gap:8px}
+.ctl .btns{display:flex;flex-wrap:wrap;gap:8px}
+.ctl button.b{font:inherit;font-size:.86rem;background:var(--panel-2);color:var(--ink);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;cursor:pointer}
+.ctl button.b.primary{background:var(--alarm);border-color:var(--alarm);color:#fff}
+.ctl button.b.calmb{background:var(--calm);border-color:var(--calm);color:#0b0e12}
+.ctl label{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:.84rem;color:var(--ink-2)}
+.ctl label output{color:var(--ink);font-family:var(--mono);font-size:.82rem}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--calm)}
+.ctl .check{display:flex;gap:8px;align-items:center;font-size:.86rem;color:var(--ink)}
+.steps{list-style:none;margin:0;padding:0 0 4px;display:grid;gap:4px;font-size:.84rem;max-height:240px;overflow:auto;border-bottom:1px solid var(--rule)}
+.steps li{padding:6px 8px;border-radius:8px;color:var(--ink-2);display:grid;grid-template-columns:22px 1fr;gap:6px}
+.steps li.now{background:var(--panel-2);color:var(--ink)}
+.steps li b{font-family:var(--mono);font-weight:500}
+.result{display:grid;gap:6px;font-size:.86rem}
+.result div{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:6px 8px;border-radius:8px;background:var(--panel)}
+.result div.win{outline:1px solid var(--calm)}
+.tl{grid-column:1/-1;position:relative;display:flex;height:.9cqw;min-height:5px;border-radius:3px;overflow:visible;margin-top:auto}
+.tl.big{height:10px;margin-top:2px}
+.tl i{display:block;height:100%}.tl i:first-child{border-radius:3px 0 0 3px}.tl i:last-child{border-radius:0 3px 3px 0}
+.tl b{position:absolute;top:-35%;bottom:-35%;width:2px;background:var(--ink);transform:translateX(-1px)}
+.result .tl{display:flex;padding:0;gap:0;background:none;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.76rem;color:var(--ink-2);margin:2px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:12px;height:8px;border-radius:2px;display:inline-block}.legend i.tick{width:2px;height:12px;background:var(--ink)}
+.result span{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:.8rem}
+.note{font-size:.78rem;color:var(--ink-2);line-height:1.5;margin:0}
+.refs{display:grid;gap:10px;font-size:.84rem;line-height:1.55;color:var(--ink)} .refs p{margin:0} .refs a{color:var(--route)} .refs b{color:var(--ink)}
+#misc button{min-width:34px;padding:6px 8px}
+.formula{font-family:var(--mono);font-size:.76rem;color:var(--ink-2);background:var(--panel);padding:8px 10px;border-radius:8px;line-height:1.6;overflow-x:auto}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>골든타임 프로토타입</h1>
+    <p>현대자동차그룹 차량용 앱 개발 공모전 시연용 · 화면의 버튼이나 오른쪽 시연 패널로 조작합니다. 모든 수치는 시연용 예시입니다.</p>
+  </div>
+  <div class="stage">
+    <div>
+      <div class="unit"><div class="display" id="display"></div></div>
+      <div class="caption"><span class="sid" id="sid">H0</span><span id="cap"></span></div>
+    </div>
+    <aside class="ctl" aria-label="시연 패널">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="t-scn" aria-selected="true">시나리오</button>
+        <button role="tab" id="t-sig" aria-selected="false">멀미 모델</button>
+        <button role="tab" id="t-rdv" aria-selected="false">랑데부 계산</button>
+        <button role="tab" id="t-ref" aria-selected="false">근거 문헌</button>
+      </div>
+
+      <section id="p-scn" class="grp">
+        <h2>시나리오</h2>
+        <select id="scn-sel" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:6px"></select>
+        <div class="btns">
+          <button class="b primary" id="play">자동 재생</button>
+          <button class="b" id="prev">이전</button>
+          <button class="b" id="next">다음</button>
+          <button class="b" id="reset">처음으로</button>
+        </div>
+        <label class="check" for="voice"><input type="checkbox" id="voice"> 음성 안내 켜기 (브라우저 음성)</label>
+        <ol class="steps" id="steps"></ol>
+        <h2>바로 가기</h2>
+        <div class="btns" id="jumps"></div>
+      </section>
+
+      <section id="p-sig" class="grp" hidden>
+        <h2>주행 시뮬레이션 (차량 신호 대체)</h2>
+        <div class="btns"><button class="b calmb" id="sim-run">주행 시작</button><button class="b" id="sim-reset">초기화</button><span class="note" id="sim-clock" style="align-self:center"></span></div>
+        <label for="m-speed">속도 (km/h) <output id="o-speed"></output><input type="range" id="m-speed" min="20" max="110" value="60"></label>
+        <label for="m-curve">굽은 길 정도 (커브/분) <output id="o-curve"></output><input type="range" id="m-curve" min="0" max="12" value="6"></label>
+        <label for="m-smooth">운전 부드러움 <output id="o-smooth"></output><input type="range" id="m-smooth" min="0" max="100" value="40"></label>
+        <label for="m-who" style="grid-template-columns:1fr">탑승자
+          <select id="m-who" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:6px">
+            <option value="child">뒷좌석 아이 (4세 · 2–12세 취약 연령)</option>
+            <option value="adult">조수석 성인</option>
+            <option value="driver">운전자 (차량 조작 주체)</option>
+          </select></label>
+        <canvas id="chart" height="150" style="width:100%;background:var(--panel);border-radius:10px"></canvas>
+        <div class="formula" id="formula"></div>
+        <h2>탑승자 체감 입력 (MISC 0–10)</h2>
+        <div class="btns" id="misc"></div>
+        <p class="note" id="misc-note">“멀미 나요” 응답과 그때의 누적 노출량으로 개인 기준을 보정합니다.</p>
+        <h2>이벤트</h2>
+        <div class="btns">
+          <button class="b primary" id="ev-airbag">에어백 전개</button>
+          <button class="b" id="ev-fever">“아이가 열이 나”</button>
+          <button class="b" id="ev-arrest">“숨을 안 쉬어”</button>
+        </div>
+      </section>
+
+      <section id="p-ref" class="grp" hidden>
+        <h2>멀미 모델의 근거</h2>
+        <div class="refs">
+          <p><b>노출량 지표 (MSDV)</b> 주파수 가중 가속도의 제곱을 시간 적분한 값의 제곱근. 국제 표준 ISO 2631-1(1997)의 멀미 지표이며, 구토 예측 비율 ≈ Km·MSDV(혼성 집단 Km = 1/3). 표준은 수직 진동으로 검증되어 차량의 수평 가속에는 참고용으로만 씁니다. <a href="https://www.mdpi.com/2571-631X/5/4/44" target="_blank" rel="noopener">요약</a> · <a href="https://researchonline.rca.ac.uk/5199/2/Diels%20et%20al%202022%20SAE_MS_preprint.pdf" target="_blank" rel="noopener">Diels 외 2022</a></p>
+          <p><b>저주파 수평 가속이 원인</b> 좌우 진동에서 멀미는 약 0.2 Hz까지 주파수가 높을수록 커지고, 제안 가중치는 약 0.03–0.25 Hz에서 평탄. 일상 주행의 커브·감가속이 이 대역에 해당. <a href="https://www.researchgate.net/publication/8382982_Motion_sickness_Effect_of_the_frequency_of_lateral_oscillation" target="_blank" rel="noopener">Donohew &amp; Griffin 2004</a> · <a href="https://journals.sagepub.com/doi/10.1177/09574271261446596" target="_blank" rel="noopener">Souman 외 2026</a></p>
+          <p><b>아이가 더 취약</b> 2–12세가 가장 취약하고 1세 미만은 거의 생기지 않음. 3개월–18세 조사에서 4–13세 빈도가 가장 높음. <a href="https://pubmed.ncbi.nlm.nih.gov/31087161/" target="_blank" rel="noopener">Henriques 외 2019 (J Neurol)</a> · <a href="https://relief.unboundmedicine.com/relief/view/cdc-yellow-book/204090/all/" target="_blank" rel="noopener">CDC Yellow Book</a></p>
+          <p><b>운전자는 덜 걸림</b> 같은 움직임을 받아도 차량을 조작하는 사람이 덜 멀미함. 그래서 탑승 위치별로 기준을 다르게 둠. <a href="https://documentacion.fundacionmapfre.org/documentacion/publico/en/bib/47230.do" target="_blank" rel="noopener">Rolnick &amp; Lubow 1991 (Ergonomics)</a></p>
+          <p><b>앞을 보게 하기</b> 전방 시야(넓든 좁든)가 있으면 멀미가 줄고, 눈을 가리면 전방 시야가 없는 것과 비슷. → 뒷좌석 화면 끄기, 앞 보기 안내. <a href="https://eprints.soton.ac.uk/10610" target="_blank" rel="noopener">Griffin &amp; Newman 2004</a></p>
+          <p><b>미리 알려 주기</b> 움직임 직전 예고가 멀미를 줄임: 실험실 음성 예고로 증상 약 17% 감소, 실제 도로에서는 진동 예고가 약 40% 감소, 음성은 효과가 더 약함. → 회전 안내(TBT) 직전 음성 예고, 진동 시트는 향후. <a href="https://research.vu.nl/en/publications/anticipatory-cues-can-mitigate-car-sickness-on-the-road/" target="_blank" rel="noopener">Reuten 외 2024</a> · <a href="https://publications.tno.nl/publication/34645616/p6Xz0N58/bos-2020-driving.pdf" target="_blank" rel="noopener">Bos 외 2020</a></p>
+          <p><b>체감 척도 (MISC)</b> 0(문제 없음)–10(구토)의 11단계, 단계마다 증상이 정해져 있음. 탑승자 응답으로 개인 기준을 보정. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8861616/" target="_blank" rel="noopener">Reuten 외 2022</a></p>
+          <p><b>근거가 약한 것</b> 외기 유입·온도 조절은 편의 조치로만 표시하고 효과를 주장하지 않음.</p>
+        </div>
+        <p class="note">임계값(아이 30, 성인 승객 45, 운전자 65 m/s<sup>1.5</sup>)과 수평 가속 적용은 시연용 가설이며, 실제 주행 데이터와 MISC 응답으로 보정합니다.</p>
+      </section>
+
+      <section id="p-rdv" class="grp" hidden>
+        <h2>랑데부 계산 (분)</h2>
+        <label for="r-amb-here">구급차가 현재 위치까지 <output id="o-amb-here"></output><input type="range" id="r-amb-here" min="5" max="40" value="20"></label>
+        <label for="r-car-hosp">자가용으로 병원까지 <output id="o-car-hosp"></output><input type="range" id="r-car-hosp" min="10" max="70" value="38"></label>
+        <label for="r-car-pt">자가용으로 접선 지점까지 <output id="o-car-pt"></output><input type="range" id="r-car-pt" min="2" max="30" value="7"></label>
+        <label for="r-amb-pt">구급차가 접선 지점까지 <output id="o-amb-pt"></output><input type="range" id="r-amb-pt" min="2" max="30" value="6"></label>
+        <label for="r-pt-hosp">구급차로 접선 지점→병원 <output id="o-pt-hosp"></output><input type="range" id="r-pt-hosp" min="5" max="60" value="25"></label>
+        <label for="r-here-hosp">구급차로 현재 위치→병원 <output id="o-here-hosp"></output><input type="range" id="r-here-hosp" min="5" max="60" value="29"></label>
+        <label for="r-hand">환자 인계 시간 <output id="o-hand"></output><input type="range" id="r-hand" min="0" max="8" value="2"></label>
+        <label class="check" for="r-urgent"><input type="checkbox" id="r-urgent" checked> 즉시 처치 필요 (의료진 만남 우선)</label>
+        <div class="result" id="rdv-out"></div>
+        <p class="note">의료진 만남 = max(자가용 도착, 구급차 도착) + 인계 시간. 병원 도착 = 의료진 만남 + 구급차 이송 시간. 실제 서비스에서 자가용 시간은 NaviHelper requestTrip, 구급차 시간은 119안전센터 위치 기반 추정(향후 119 실시간 연계)으로 구합니다. 최종 결정은 119가 합니다.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const disp=$('#display');
+const state={forceM:null,screen:'H0',chat:[],timerStart:null,toast:'',crash:false,count:10};
+let countTimer=null, tick=null, playTimer=null, stepIdx=-1;
+
+/* ---------- motion model (MSDV-based) ---------- */
+const PROFILE={child:{thr:30,label:'뒷좌석 아이'},adult:{thr:45,label:'조수석 성인'},driver:{thr:65,label:'운전자'}};
+const sim={t:0,run:false,...newFilt(),dose2:0,ax:0,ay:0,aw:0,hist:[],personal:{child:null,adult:null,driver:null},cueAt:-99,cueTxt:'',lastCurveSign:0};
+function prm(){return{v:+$('#m-speed').value,c:+$('#m-curve').value,sm:+$('#m-smooth').value,who:$('#m-who').value}}
+function threshold(){const p=prm();return sim.personal[p.who]??PROFILE[p.who].thr}
+function msdv(){return Math.sqrt(sim.dose2)}
+function motion(){return Math.round(Math.max(0,Math.min(100,msdv()/threshold()*100)))}
+const tauL=1/(2*Math.PI*0.25), tauH=1/(2*Math.PI*0.03); // 0.03–0.25 Hz band (Donohew & Griffin 2004)
+function bp(f,x,dt){f.lp+=(x-f.lp)*dt/(tauL+dt);f.hp=tauH/(tauH+dt)*(f.hp+f.lp-f.plp);f.plp=f.lp;return f.hp}
+function newFilt(){return{fx:{lp:0,hp:0,plp:0},fy:{lp:0,hp:0,plp:0}}}
+function core(st,p,dt){
+  const v=p.v/3.6, fc=p.c/60;           // speed (m/s), curves per second
+  const kAmp=0.0006+0.0009*p.c;          // curvature amplitude (1/m)
+  const kappa=fc>0?kAmp*Math.sin(2*Math.PI*fc*st.t)*(0.8+0.2*Math.sin(0.37*st.t)):0;
+  const ay=v*v*kappa;                    // lateral accel = v^2 * curvature
+  const harsh=(100-p.sm)/100;            // braking into curves
+  const ax=-harsh*1.8*Math.max(0,Math.cos(2*Math.PI*fc*st.t))*(fc>0?1:0)+0.15*Math.sin(0.05*st.t);
+  const aw=Math.hypot(bp(st.fx,ax,dt),bp(st.fy,ay,dt)); // weight each axis, then combine
+  st.dose2+=aw*aw*dt; st.ax=ax; st.ay=ay; st.aw=aw; st.t+=dt;
+}
+function stepSim(dt){
+  const p=prm(); core(sim,p,dt);
+  // anticipatory cue: announce upcoming curve (TBT) for passengers
+  const fc=p.c/60, sign=Math.sign(Math.sin(2*Math.PI*fc*(sim.t+4)));
+  if(fc>0&&sign!==sim.lastCurveSign&&p.who!=='driver'){sim.lastCurveSign=sign;sim.cueAt=sim.t;sim.cueTxt=sign>0?'곧 오른쪽으로 돌아요':'곧 왼쪽으로 돌아요';}
+}
+/* route forecast: run the same model over the route's segments before departure */
+const ROUTES={
+  fast:{name:'추천 경로',time:'2시간 41분',curvy:'굽은 길 38분',segs:[{min:120,v:100,c:.5},{min:38,v:55,c:8}]},
+  comfy:{name:'편안한 경로',time:'2시간 49분',curvy:'굽은 길 9분',segs:[{min:140,v:100,c:.5},{min:9,v:60,c:5}]}
+};
+function forecast(r){const st=Object.assign({t:0,dose2:0},newFilt());r.segs.forEach(g=>{for(let i=0;i<g.min*300;i++)core(st,{v:g.v,c:g.c,sm:60},0.2);});return Math.sqrt(st.dose2)}
+Object.values(ROUTES).forEach(r=>r.msdv=forecast(r));
+function fmtT(t){const m=Math.floor(t/60),s=Math.floor(t%60);return m+'분 '+String(s).padStart(2,'0')+'초'}
+function drawChart(){
+  const cv=$('#chart'); if(!cv||cv.offsetParent===null) return;
+  const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=150*dpr;
+  const c=cv.getContext('2d');c.scale(dpr,dpr);const w=r.width,h=150;
+  c.clearRect(0,0,w,h);c.font='11px IBM Plex Sans KR, sans-serif';
+  const H=sim.hist.slice(-300); const thr=threshold();
+  const maxD=Math.max(thr*1.3,...H.map(x=>x.d),1);
+  c.strokeStyle='#2b3540';c.beginPath();c.moveTo(34,h-22);c.lineTo(w-8,h-22);c.stroke();
+  const ty=h-22-(thr/maxD)*(h-40);
+  c.setLineDash([4,4]);c.strokeStyle='#f0a83a';c.beginPath();c.moveTo(34,ty);c.lineTo(w-8,ty);c.stroke();c.setLineDash([]);
+  c.fillStyle='#f0a83a';c.fillText('개인 기준 '+thr.toFixed(0),w-90,ty-4);
+  c.fillStyle='#9aa7b4';c.fillText('MSDV',2,14);c.fillText('0',20,h-18);c.fillText(maxD.toFixed(0),2,26);
+  if(H.length>1){
+    c.strokeStyle='#4c8df6';c.lineWidth=1;c.beginPath();
+    H.forEach((x,i)=>{const X=34+i/(300-1)*(w-42),Y=h-22-Math.min(1,x.aw/4)*(h-40)*0.5;i?c.lineTo(X,Y):c.moveTo(X,Y)});c.stroke();
+    c.strokeStyle='#37c3a6';c.lineWidth=2.4;c.beginPath();
+    H.forEach((x,i)=>{const X=34+i/(300-1)*(w-42),Y=h-22-(x.d/maxD)*(h-40);i?c.lineTo(X,Y):c.moveTo(X,Y)});c.stroke();
+  }
+  c.fillStyle='#37c3a6';c.fillText('누적 노출 MSDV',40,h-6);c.fillStyle='#4c8df6';c.fillText('가중 가속도 |a_w|',150,h-6);
+}
+function updSignals(){
+  const p=prm();
+  $('#o-speed').textContent=p.v; $('#o-curve').textContent=p.c; $('#o-smooth').textContent=p.sm;
+  const D=msdv(), thr=threshold(), m=motion();
+  $('#formula').innerHTML=`가로 가속 a_y = v²·κ (속도는 위치 변화, 곡률은 핸들 각도·진행 방향 변화로 추정)<br>세로 가속 a_x = 속도 변화 (제동 신호 보조)<br>a_w = |(가중 a_x, 가중 a_y)|, 축별 0.03–0.25 Hz 대역 가중<br>MSDV = √∫a_w²dt = <b style="color:var(--ink)">${D.toFixed(1)}</b> m/s^1.5 · 기준 ${thr.toFixed(0)} (${PROFILE[p.who].label}) → 위험도 <b style="color:var(--ink)">${m}%</b><br>참고: ISO 2631-1 구토 예측 ≈ Km·MSDV (Km=1/3, 수직 기준이라 참고용) = ${(D/3).toFixed(1)}%`;
+  $('#sim-clock').textContent='주행 '+fmtT(sim.t);
+  drawChart();
+}
+function simLoop(){
+  if(!sim.run) return;
+  for(let k=0;k<20;k++){stepSim(0.1);} // 2 s of driving per frame-batch
+  sim.hist.push({d:msdv(),aw:sim.aw}); if(sim.hist.length>600) sim.hist.shift();
+  updSignals();
+  const m=motion();
+  if(m>=70&&state.screen==='H0'){go('H2');speak('뒷좌석 멀미 위험이 높아지고 있어요. 앞을 보게 해 주시고, 6킬로미터 앞 휴게소에 들를까요?');}
+  else if(['H0','H2'].includes(state.screen)) render();
+  if(sim.t-sim.cueAt<0.2&&state.screen.startsWith('H')&&motion()>=40){toast('회전 예고 · '+sim.cueTxt);speak(sim.cueTxt);}
+  setTimeout(simLoop,120);
+}
+/* ---------- rendezvous ---------- */
+function rdv(){
+  const g=id=>+$(id).value;
+  const v={ambHere:g('#r-amb-here'),carHosp:g('#r-car-hosp'),carPt:g('#r-car-pt'),ambPt:g('#r-amb-pt'),ptHosp:g('#r-pt-hosp'),hereHosp:g('#r-here-hosp'),hand:g('#r-hand')};
+  const opts=[
+    {k:'wait',name:'그 자리에서 대기',contact:v.ambHere+v.hand,hosp:v.ambHere+v.hand+v.hereHosp,segs:[['wait',v.ambHere],['hand',v.hand],['amb',v.hereHosp]]},
+    {k:'direct',name:'직접 병원으로',contact:v.carHosp,hosp:v.carHosp,segs:[['car',v.carHosp]]},
+    {k:'meet',name:'졸음쉼터에서 구급차 접선',contact:Math.max(v.carPt,v.ambPt)+v.hand,hosp:Math.max(v.carPt,v.ambPt)+v.hand+v.ptHosp,segs:[['car',v.carPt],['wait',Math.max(0,v.ambPt-v.carPt)],['hand',v.hand],['amb',v.ptHosp]]}
+  ];
+  const urgent=$('#r-urgent').checked;
+  let best;
+  if(urgent){best=opts.reduce((a,b)=>b.contact<a.contact||(b.contact===a.contact&&b.hosp<a.hosp)?b:a);}
+  else{const ok=opts.filter(o=>o.contact<=20);const pool=ok.length?ok:opts;best=pool.reduce((a,b)=>b.hosp<a.hosp?b:a);}
+  opts.forEach(o=>o.rec=o===best);
+  return opts;
+}
+const SEGC={car:'var(--route)',wait:'#4a5562',hand:'var(--amber)',amb:'var(--alarm)'};
+const SEGN={car:'자가용',wait:'구급차 기다림',hand:'인계',amb:'구급차 이송'};
+function rdvBar(o,max,big){return `<div class="tl${big?' big':''}">${o.segs.filter(g=>g[1]>0).map(g=>`<i style="width:${g[1]/max*100}%;background:${SEGC[g[0]]}" title="${SEGN[g[0]]} ${g[1]}분"></i>`).join('')}<b style="left:${o.contact/max*100}%"></b></div>`}
+function updRdv(){
+  ['amb-here','car-hosp','car-pt','amb-pt','pt-hosp','here-hosp','hand'].forEach(k=>$('#o-'+k).textContent=$('#r-'+k).value+'분');
+  const o=rdv();
+  const max=Math.max(...o.map(x=>x.hosp));
+  $('#rdv-out').innerHTML=o.map(x=>`<div class="${x.rec?'win':''}"><b>${x.rec?'추천 · ':''}${x.name}</b><span>만남 ${x.contact}분</span><span>병원 ${x.hosp}분</span>${rdvBar(x,max,true)}</div>`).join('')
+    +`<p class="legend">${Object.keys(SEGC).map(k=>`<span><i style="background:${SEGC[k]}"></i>${SEGN[k]}</span>`).join('')}<span><i class="tick"></i>의료진 만남</span></p>`;
+  if(state.screen==='E3') render();
+}
+
+/* ---------- screens ---------- */
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+function gauge(v,color,label){
+  const r=42,c=2*Math.PI*r*0.75,off=c*(1-v/100);
+  return `<div class="gauge"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="#2b3540" stroke-width="9" stroke-dasharray="${c} 999" transform="rotate(135 50 50)" stroke-linecap="round"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-dasharray="${c-off} 999" transform="rotate(135 50 50)" stroke-linecap="round"/></svg><div class="n">${v}</div><div class="l">${label}</div></div>`;
+}
+function bar(mode,cls,driving=true){return `<div class="bar"><b>골든타임</b><span class="chip ${cls}">${mode}</span><span class="clock">14:32 · ${driving?'주행 중':'정차'}</span></div>`}
+function elapsed(){if(!state.timerStart)return '00:00';const s=Math.floor((Date.now()-state.timerStart)/1000)+120;return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+const CAP={
+ H0:'홈 · 멀미 위험 = 누적 가속 노출(MSDV) ÷ 탑승자별 개인 기준. 멀미 모델 탭에서 주행을 시작해 보세요',
+ H1:'출발 전 멀미 예보 · 경로의 회전 정보(TBT)와 예상 속도로 같은 MSDV 모델을 미리 계산해 두 경로 비교, changeRouteOption(COMFORTABLE)',
+ H2:'멀미 대응 · 누적 가속 노출(MSDV)이 개인 기준의 70%를 넘으면 표시. 앞 보기(Griffin & Newman 2004)·회전 예고(Reuten 외 2024)·부드러운 운전, addWaypoint',
+ H3:'주의 모드 · 주행 중 목록은 3개까지, “첫 번째”라고 말해 선택',
+ E1:'응급 접수 · SpeechToText(HYBRID), 질문은 한 번에 하나, 실내등·앰비언트 응급색',
+ E2:'상황 요약·119 · 요약과 위치를 119 문자신고로 먼저 보내고(3초 안에 취소 가능, 가족 프로필에서 사전 동의) 전화 연결 · 진단 문구 금지',
+ E3:'이동 방법 비교 · requestTrip(후보 지점·병원 도착 시각) + 구급차 추정 · 최종 결정은 119',
+ E4:'접선 지점 이동 · requestRouteWithWaypoints, FusedLocation addProximityAlert(반경 300m)',
+ E5:'도착·인계 · onWayPointArrived와 정차 확인 후 Door 잠금 해제, 구급대원용 밝은 화면',
+ E6:'심정지 의심 · 랑데부 계산 없이 정차·119·압박 박자, 고정 대본만 사용',
+ E7:'사고 자동 감지 · Safety registerSeatAirbagDeployed → 10초 무응답 시 응급 접수',
+ S1:'가족 건강 프로필 · 정차 중에만 편집, 차량에만 저장'
+};
+function sendLeft(){return state.sendAt?Math.max(0,3-Math.floor((Date.now()-state.sendAt)/1000)):3}
+function sendCard(){
+  if(state.sendCancel) return `<div class="card" style="align-items:center;justify-content:center;border:.25cqw solid var(--alarm)"><div class="big">전송을 취소했어요</div><button class="btn" data-send="1" style="font-size:2cqw;padding:1cqw 5cqw">119 요약 보내고 전화</button></div>`;
+  const left=sendLeft();
+  if(left>0) return `<div class="card" style="align-items:center;justify-content:center;border:.25cqw solid var(--alarm)"><div class="big">${left}초 뒤 119에 요약을 보내요</div><div class="sub">위치·상황 요약을 문자로 먼저 보내고 전화를 연결합니다</div><button class="btn ghost" data-cancel="1" style="font-size:1.5cqw">보내지 않기</button></div>`;
+  return `<div class="card" style="align-items:center;justify-content:center;border:.25cqw solid var(--calm)"><div class="big calm">✓ 119에 요약을 보냈어요</div><div class="mid">위치·증상·병력 · 문자신고 접수</div><div class="mid red">전화 연결 중 · 상담원 질문에만 답하세요</div></div>`;
+}
+function screenHTML(id){
+  const m=state.forceM??motion();
+  switch(id){
+  case 'H0': return bar('일상','')+`<div class="body" style="grid-template-columns:1fr 1.15fr 1.1fr">
+    <div class="card"><h3>멀미 위험 · ${PROFILE[prm().who].label}</h3>${gauge(m,m>=70?'#f0a83a':'#37c3a6','누적 노출 / 개인 기준')}<div class="sub" style="text-align:center">MSDV ${(state.forceM!=null?state.forceM*threshold()/100:msdv()).toFixed(1)} / ${threshold().toFixed(0)}</div></div>
+    <div style="display:grid;gap:1.4cqw;min-height:0">
+      <div class="card"><h3>탑승자</h3><div class="seat"><div class="on"><i></i>운전석</div><div><i></i>조수석</div><div class="${prm().who==='child'?'on':''}"><i></i>뒷좌석 · 아이 4세</div></div></div>
+      <div class="card"><h3>휴식</h3><div class="mid">연속 주행 ${Math.floor((95+sim.t/60)/60)}시간 ${Math.floor((95+sim.t/60)%60)}분</div><div class="sub">다음 휴게소 · 안성 18km</div></div>
+    </div>
+    <div class="card emerg"><div class="big">응급 상황인가요?</div><div class="sub">버튼을 누르거나 “응급 모드”라고 말하세요</div><button class="btn" data-go="E1" style="margin-top:1cqw;font-size:2cqw;padding:1.3cqw 4cqw">응급 모드</button>
+      <div class="row" style="margin-top:.6cqw"><button class="btn ghost" data-go="H1" style="font-size:1.1cqw;padding:.6cqw 1.4cqw">멀미 예보</button><button class="btn ghost" data-go="S1" style="font-size:1.1cqw;padding:.6cqw 1.4cqw">가족 프로필</button></div></div>
+  </div>`;
+  case 'H1': {const f=ROUTES.fast,c=ROUTES.comfy,thr=threshold(),pf=Math.round(f.msdv/thr*100),pc=Math.round(c.msdv/thr*100);
+    const card=(r,p,rec)=>`<div class="card opt ${rec?'rec':''}"><h3>${r.name} · 예상 노출</h3>${gauge(Math.min(100,p),p>=100?'#e5484d':p>=70?'#f0a83a':'#37c3a6',p>=100?'기준 초과 '+p+'%':'예상 위험도')}<div class="sub" style="text-align:center">${r.time} · ${r.curvy} · MSDV ${r.msdv.toFixed(0)}</div></div>`;
+    return bar('멀미 예보','',false)+`<div class="body" style="grid-template-columns:1fr 1fr 1.05fr">
+    ${card(f,pf,false)}${card(c,pc,true)}
+    <div class="card"><h3>서울 → 강릉 · ${PROFILE[prm().who].label} 기준 ${thr.toFixed(0)}</h3><div class="mid">✓ 뒷좌석 화면 대신 앞 창밖 보기</div><div class="mid">✓ 회전 예고 켜기</div><div class="mid">✓ 굽은 길 전 휴게소 들르기</div><button class="btn calm" data-go="H0" data-toast="편안한 경로로 바꿨어요 (changeRouteOption COMFORTABLE)" style="margin-top:auto">편안한 경로로 출발</button></div>
+  </div>`;}
+  case 'H2': return bar('일상 케어','')+`<div class="body" style="grid-template-columns:1.6fr 1fr">
+    <div class="card map"><canvas data-map="plain"></canvas></div>
+    <div class="card" style="border:.25cqw solid var(--amber)"><div class="mid amb">멀미 위험이 높아지고 있어요</div><div class="row">${gauge(m,'#f0a83a','위험도')}<div style="display:grid;gap:.5cqw"><div class="mid">✓ 뒷좌석 화면 끄고 앞 보기 안내</div><div class="mid">✓ 회전 직전 음성 예고</div><div class="mid">✓ 부드러운 운전 안내</div></div></div>
+      <div class="row" style="margin-top:auto"><button class="btn calm" data-go="H0" data-toast="휴게소를 경유지로 추가했어요 (addWaypoint)">휴게소 6km 경유</button><button class="btn ghost" data-go="H0">괜찮아요</button></div></div>
+  </div>`;
+  case 'H3': return bar('주의','amber')+`<div class="body" style="grid-template-columns:1fr 2fr">
+    <div class="card"><div class="big">“아이가 열이 나요”</div><div class="sub">가까운 진료·약국을 찾았어요</div><div class="sub" style="margin-top:auto">숨쉬기 힘들어하거나 경련하면</div><button class="btn" data-go="E1">응급 모드</button></div>
+    <div class="list">${[['○○아동병원 야간진료','4.2km · 9분 · 22시까지'],['△△약국','1.8km · 5분 · 영업 중'],['□□의원','6.0km · 13분 · 21시까지']].map(x=>`<div class="card"><div><div class="mid">${x[0]}</div><div class="sub">${x[1]}</div></div><button class="btn amb" data-go="H0" data-toast="${x[0]}을(를) 경유지로 추가했어요">경유</button></div>`).join('')}</div>
+  </div>`;
+  case 'E1': return bar('응급','alarm')+`<div class="body" style="grid-template-columns:1fr 2.4fr">
+    <div class="card" style="align-items:center;justify-content:center;background:transparent"><div class="mic">${MIC}</div><div class="mid" style="margin-top:2.4cqw">듣고 있어요</div></div>
+    <div class="card"><h3>대화</h3><div class="chat" id="chat">${state.chat.map(c=>`<div class="${c.app?'app':''}"><div class="who">${c.app?'골든타임':'탑승자'}</div><div class="say">${c.t}</div></div>`).join('')||'<div class="sub">무엇이 필요하신가요? 상황을 말씀해 주세요.</div>'}</div></div>
+  </div>`;
+  case 'E2': {const crash=state.crash; return bar('응급','alarm')+`<div class="body" style="grid-template-columns:1.1fr 1fr">
+    <div class="card"><h3>상황 요약 · 119 문자신고로 전송</h3><dl class="kv">${(crash?[['대상','운전자·동승자'],['상황','충돌 감지, 응답 없음'],['시작','방금'],['위치','영동고속도로 강릉방향 ○○km · 37.4°N 127.6°E'],['차량','회색 세단 · 탑승 3명'],['조치','없음']]:[['대상','4세 남아 (뒷좌석)'],['증상','경련, 발열'],['시작','약 2분 전'],['위치','영동고속도로 강릉방향 ○○km · 37.4°N 127.6°E'],['병력','열성경련 이력'],['조치','옆으로 눕힘']]).map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl></div>
+    <div style="display:grid;gap:1.4cqw;min-height:0">
+      ${sendCard()}
+      <div class="card"><h3>지금 할 일</h3><div class="mid">${crash?'안전한 곳에 차를 세우고 비상등을 켜세요.':'옆으로 눕히고, 입에 아무것도 넣지 마세요.'}</div><div class="row"><span class="mid red">${crash?'119에 사고 정보 전송':'경련 시간 <span class="timer" id="timer">'+elapsed()+'</span>'}</span>${crash?'':'<button class="btn ghost" data-go="E3" style="margin-left:auto;font-size:1.2cqw">이동 방법 보기</button>'}</div></div>
+    </div></div>`;}
+  case 'E3': {const o=rdv(); return bar('응급','alarm')+`<div class="body" style="grid-template-rows:auto 1fr auto;grid-template-columns:1fr">
+    <div class="mid">어떻게 갈까요? <span class="sub">119 안내가 우선입니다</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.4cqw;min-height:0">${o.map(x=>`<div class="card opt ${x.rec?'rec':''}">${x.rec?'<span class="tag">추천</span>':'<span class="tag" style="visibility:hidden">추천</span>'}<div class="mid">${x.name}</div><div class="big ${x.rec?'calm':''}">의료진 만남 ${x.contact}분</div><div class="sub">병원 도착 ${x.hosp}분</div>${rdvBar(x,Math.max(...o.map(y=>y.hosp)))}</div>`).join('')}</div>
+    <div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div class="mid">응급실 후보 · ○○대병원 소아응급 가용 · 34km</div><button class="btn calm" data-go="E4" style="font-size:1.4cqw">${o.find(x=>x.rec).k==='meet'?'접선 지점으로':o.find(x=>x.rec).k==='direct'?'병원으로 안내':'이 자리에서 대기'}</button></div>
+  </div>`;}
+  case 'E4': return bar('응급','alarm')+`<div class="body" style="grid-template-columns:1.8fr 1fr">
+    <div class="card map"><canvas data-map="meet"></canvas></div>
+    <div class="card"><h3>접선 지점</h3><div class="big">○○ 졸음쉼터</div><div class="mid calm">6.2km · 약 5분</div><div class="sub">구급차 도착 예상 6분</div><div class="sub">가족에게 위치 공유 중</div><div class="mid amb">정상 속도로 운전하세요</div><button class="btn ghost" data-go="E5" style="margin-top:auto;font-size:1.3cqw">도착 (시연)</button></div>
+  </div>`;
+  case 'E5': return bar('응급','alarm',false)+`<div class="body" style="grid-template-columns:1.8fr 1fr">
+    <div class="card sheet"><h3>구급대원 인계 정보</h3><dl class="kv" style="grid-template-columns:11cqw 1fr">${[['대상','4세 남아'],['증상','경련, 발열 (오늘 아침부터)'],['경련 시작','14:28 · 경과 '+elapsed()],['조치','옆으로 눕힘'],['병력·알레르기','열성경련 이력 · 알레르기 없음']].map(x=>`<dt style="color:#556">${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl></div>
+    <div class="card"><div class="big calm">도착했어요</div><div class="mid">✓ 정차 확인</div><div class="mid">✓ 문 잠금 해제됨</div><div class="mid">✓ 실내등 켜짐</div><button class="btn calm" data-go="H0" data-toast="이송 병원으로 안내합니다" style="margin-top:auto;font-size:1.4cqw">이송 병원 따라가기</button></div>
+  </div>`;
+  case 'E6': return bar('심정지 의심','alarm')+`<div class="body" style="grid-template-columns:1fr"><div class="card" style="align-items:center;justify-content:center;text-align:center;gap:1.4cqw">
+    <div class="big" style="font-size:3cqw">안전한 곳에 바로 멈추세요</div><div class="mid sub">119에 위치를 보냈어요. 전화가 연결되면 상담원 안내에 따라 가슴 압박을 시작하세요</div>
+    <button class="btn" style="font-size:2.4cqw;padding:1.2cqw 8cqw" data-toast="119 전화를 연결합니다">119 전화 연결</button>
+    <div class="mid red" id="beat">압박 박자 ● ● ● ● · 분당 110회</div></div></div>`;
+  case 'E7': return bar('사고 감지','alarm',false)+`<div class="body" style="grid-template-columns:1fr"><div class="card" style="align-items:center;justify-content:center;text-align:center;gap:1.4cqw">
+    <div class="big" style="font-size:2.8cqw">충돌이 감지되었어요. 괜찮으세요?</div><div class="count" id="count">${state.count}</div>
+    <div class="sub">응답이 없으면 응급 모드로 바꾸고 119에 사고 위치를 보냅니다</div>
+    <div class="row"><button class="btn ghost" data-go="H0" data-stop="1">괜찮아요</button><button class="btn" data-go="E2" data-crash="1">응급 모드</button></div></div></div>`;
+  case 'S1': return bar('설정','',false)+`<div class="body" style="grid-template-columns:2fr 1fr">
+    <div class="list">${[['아이 · 4세','열성경련 이력 · 알레르기 없음'],['어머니 · 68세','고혈압 · 복용약 2종'],['보호자 연락처','2명 등록']].map(x=>`<div class="card"><div><div class="mid">${x[0]}</div><div class="sub">${x[1]}</div></div><span class="sub">편집</span></div>`).join('')}</div>
+    <div class="card"><h3>개인정보</h3><div class="mid">차량에만 저장</div><div class="mid">응급 시 119 요약 자동 전송 · 켬</div><div class="mid">언제든 삭제</div><button class="btn ghost" data-go="H0" style="margin-top:auto;font-size:1.3cqw">홈으로</button></div>
+  </div>`;
+  }
+}
+function drawMaps(){
+  disp.querySelectorAll('canvas[data-map]').forEach(cv=>{
+    const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;
+    const c=cv.getContext('2d');c.scale(dpr,dpr);const w=r.width,h=r.height;
+    c.fillStyle='#121921';c.fillRect(0,0,w,h);c.strokeStyle='#1b242d';c.lineWidth=1;
+    for(let i=1;i<8;i++){c.beginPath();c.moveTo(i*w/8,0);c.lineTo(i*w/8,h);c.stroke();}
+    for(let i=1;i<4;i++){c.beginPath();c.moveTo(0,i*h/4);c.lineTo(w,i*h/4);c.stroke();}
+    const p=[[.06,.85],[.3,.62],[.5,.64],[.74,.36],[.94,.12]].map(a=>[a[0]*w,a[1]*h]);
+    c.strokeStyle='#4c8df6';c.lineWidth=Math.max(4,w*.012);c.lineJoin='round';c.beginPath();p.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.stroke();
+    c.fillStyle='#fff';c.beginPath();c.arc(p[0][0],p[0][1],w*.012,0,7);c.fill();
+    c.fillStyle='#e5484d';c.fillRect(p[4][0]-w*.014,p[4][1]-w*.014,w*.028,w*.028);
+    if(cv.dataset.map==='meet'){c.fillStyle='#f0a83a';c.beginPath();c.arc(p[2][0],p[2][1],w*.016,0,7);c.fill();c.font=`600 ${w*.022}px IBM Plex Sans KR, sans-serif`;c.fillText('접선',p[2][0]-w*.02,p[2][1]-w*.03);}
+    else{c.fillStyle='#37c3a6';c.beginPath();c.arc(p[3][0],p[3][1],w*.014,0,7);c.fill();c.font=`600 ${w*.022}px IBM Plex Sans KR, sans-serif`;c.fillText('휴게소 6km',p[3][0]+w*.02,p[3][1]+w*.01);}
+  });
+}
+function render(){
+  disp.classList.toggle('alarm',state.screen.startsWith('E'));
+  disp.innerHTML=`<div class="d">${screenHTML(state.screen)}</div>${state.toast?`<div class="toast">${state.toast}</div>`:''}`;
+  $('#sid').textContent=state.screen==='H3'?'H3':state.screen; $('#cap').textContent=CAP[state.screen]||'';
+  drawMaps();
+  const ch=$('#chat'); if(ch) ch.scrollTop=ch.scrollHeight;
+}
+function go(id,opts={}){
+  if(id==='E2'&&state.screen!=='E2'){state.sendAt=Date.now();state.sendCancel=false;}
+  state.screen=id; if(!opts.scripted) state.forceM=null;
+  if(id.startsWith('E')&&id!=='E7'){ if(!state.timerStart&&!state.crash) state.timerStart=Date.now(); }
+  if(id==='H0'||(opts.scripted&&!id.startsWith('E2'))){state.crash=false;}
+  clearInterval(countTimer);
+  if(id==='E7'&&opts.scripted){state.count=stepIdx>0&&STEPS[stepIdx]&&STEPS[stepIdx].toast==='10초 동안 응답 없음'?0:10;}
+  if(id==='E7'&&!opts.scripted){state.count=10;countTimer=setInterval(()=>{state.count--; if(state.count<=0){clearInterval(countTimer);state.crash=true;speak('응급 모드로 바꿨어요. 3초 뒤 119에 사고 정보를 보내요.');go('E2');} else {const el=$('#count'); if(el) el.textContent=state.count;}},1000); speak('충돌이 감지되었어요. 괜찮으세요? 대답이 없으면 응급 모드로 바꿀게요.');}
+  render();
+}
+disp.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.crash) state.crash=true;
+  if(b.dataset.cancel){state.sendCancel=true;render();return;}
+  if(b.dataset.send){state.sendCancel=false;state.sendAt=Date.now()-3000;toast('119 문자신고 전송 · 전화 연결');render();return;}
+  if(b.dataset.toast) toast(b.dataset.toast);
+  if(b.dataset.go){ if(b.dataset.go==='E1'&&state.screen!=='E1'){state.chat=[];} go(b.dataset.go); }
+});
+let toastT=null;
+function toast(t){state.toast=t;clearTimeout(toastT);toastT=setTimeout(()=>{state.toast='';render();},2600);}
+
+/* ---------- voice ---------- */
+function speak(t){
+  if(!$('#voice').checked) return;
+  try{const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+}
+
+/* ---------- scenario ---------- */
+const SCN={
+ A:{t:'고속도로 열성경련 · 랑데부',steps:[
+ {s:'E1',u:'아이가 경련해!'},
+ {s:'E1',a:'응급 모드를 시작할게요. 아이가 몇 살인가요?'},
+ {s:'E1',u:'네 살이요. 아침부터 열이 있었어요.'},
+ {s:'E1',a:'경련이 시작된 지 얼마나 됐나요?'},
+ {s:'E1',u:'일이 분 된 것 같아요.'},
+ {s:'E2',a:'119에 위치와 상황 요약을 먼저 보냈어요. 전화가 연결되면 상담원 질문에만 답해 주세요.'},
+ {s:'E2',a:'아이를 옆으로 눕히고, 입에는 아무것도 넣지 마세요. 억지로 붙잡지 마세요. 경련 시간을 재고 있어요.'},
+ {s:'E3',a:'119 안내가 가장 우선이에요. 참고로, 8킬로미터 앞 졸음쉼터에서 구급차를 만나면 9분 안에 의료진을 만날 수 있어요. 그쪽으로 안내할까요?'},
+ {s:'E4',u:'응, 거기로 가자.',a:'졸음쉼터까지 6킬로미터, 약 5분이에요. 정상 속도로 운전하세요. 구급차는 6분 뒤 도착 예정이에요.'},
+ {s:'E4',a:'곧 졸음쉼터예요. 오른쪽으로 들어가 안전하게 멈추세요.',toast:'접선 지점 반경 300m 진입 (addProximityAlert)'},
+ {s:'E5',a:'문 잠금을 풀었어요. 구급대원에게 화면을 보여 주세요.'}]},
+ B:{t:'사고 자동 감지 · 에어백',steps:[
+ {s:'E7',a:'충돌이 감지되었어요. 괜찮으세요? 대답이 없으면 응급 모드로 바꿀게요.',toast:'registerSeatAirbagDeployed 신호 수신'},
+ {s:'E7',toast:'10초 동안 응답 없음'},
+ {s:'E2',crash:1,a:'응급 모드로 바꿨어요. 3초 뒤 119에 사고 정보를 보내요.'},
+ {s:'E2',crash:1,a:'119에 사고 위치와 탑승 인원을 먼저 보냈어요. 안전한 곳에 있으면 비상등을 켜세요.'}]},
+ C:{t:'심정지 의심 · 고정 대본',steps:[
+ {s:'E1',u:'아빠가 숨을 안 쉬어!'},
+ {s:'E6',a:'안전한 곳에 바로 멈추세요. 119에 위치를 보내고 전화를 연결할게요.',toast:'심정지 키워드 감지 → 랑데부 계산 생략 · 119 문자신고 즉시 전송'},
+ {s:'E6',a:'상담원 안내에 따라 가슴 한가운데를 세게, 빠르게 누르세요. 박자를 맞춰 드릴게요.',toast:'고정 대본 · 생성형 문구 사용 안 함'}]},
+ D:{t:'아이 멀미 · 예보와 대응',steps:[
+ {s:'H1',a:'오늘 경로는 굽은 길이 38분이에요. 9분 더 걸리지만 편안한 경로로 가면 예상 흔들림이 절반 수준이에요. 바꿀까요?'},
+ {s:'H0',u:'그래, 바꿔줘.',toast:'changeRouteOption(COMFORTABLE)',m:22},
+ {s:'H0',a:'곧 오른쪽으로 돌아요.',toast:'회전 예고 · TBT 회전 300m 전',m:48},
+ {s:'H2',a:'뒷좌석 멀미 위험이 높아지고 있어요. 화면을 끄고 앞 창밖을 보게 해 주세요. 6킬로미터 앞 휴게소에 들를까요?',m:76},
+ {s:'H0',u:'그래.',a:'휴게소를 경유지로 넣었어요. 아이가 괜찮은지 0부터 10까지로 물어봐 주세요.',toast:'addWaypoint(휴게소)',m:76}]},
+ E:{t:'아이 발열 · 주의 모드',steps:[
+ {s:'H3',u:'아이가 열이 나.',a:'숨쉬기 힘들어하거나 경련하나요?'},
+ {s:'H3',u:'아니, 열만 있어.',a:'가까운 곳 세 군데를 찾았어요. 첫 번째, ○○아동병원 야간진료, 9분 거리예요. 들를까요?'},
+ {s:'H0',u:'첫 번째.',a:'○○아동병원을 경유지로 넣었어요. 경련하거나 숨쉬기 힘들어하면 응급 모드라고 말해 주세요.',toast:'addWaypoint(○○아동병원)'}]}
+};
+let STEPS=SCN.A.steps;
+$('#scn-sel').innerHTML=Object.keys(SCN).map(k=>`<option value="${k}">${k} · ${SCN[k].t}</option>`).join('');
+function loadScn(k){STEPS=SCN[k].steps;$('#steps').innerHTML=STEPS.map((x,i)=>`<li data-i="${i}"><b>${i+1}</b><span>${stepLabel(x)}</span></li>`).join('');}
+$('#scn-sel').addEventListener('change',e=>{stopPlay();stepIdx=-1;state.chat=[];state.timerStart=null;state.crash=false;loadScn(e.target.value);go('H0');});
+function stepLabel(x){return ((x.u?'탑승자: '+x.u:'')+(x.u&&x.a?' / ':'')+(x.a?'골든타임: '+x.a:''))||('['+x.s+'] '+(x.toast||''))}
+$('#steps').innerHTML=STEPS.map((x,i)=>`<li data-i="${i}"><b>${i+1}</b><span>${stepLabel(x)}</span></li>`).join('');
+function runStep(i){
+  stepIdx=i; const x=STEPS[i];
+  if(i===0){state.chat=[];state.timerStart=null;state.crash=false;}
+  state.forceM=x.m??null; if(x.crash) state.crash=true;
+  if(x.s==='E2'&&/보냈어요/.test(x.a||'')) state.sendAt=Date.now()-3000;
+  if(x.u) state.chat.push({t:x.u}); if(x.a&&x.s==='E1') state.chat.push({t:x.a,app:true});
+  if(x.toast) toast(x.toast);
+  go(x.s,{scripted:true});
+  if(x.crash) state.crash=true;
+  if(x.a) speak(x.a);
+  document.querySelectorAll('#steps li').forEach(li=>li.classList.toggle('now',+li.dataset.i===i));
+  const now=document.querySelector('#steps li.now'); if(now) now.scrollIntoView({block:'nearest'});
+}
+$('#next').onclick=()=>{stopPlay(); if(stepIdx<STEPS.length-1) runStep(stepIdx+1);};
+$('#prev').onclick=()=>{stopPlay(); if(stepIdx>0){const t=stepIdx-1; state.chat=[]; for(let k=0;k<=t;k++){const x=STEPS[k]; if(x.u)state.chat.push({t:x.u}); if(x.a&&x.s==='E1')state.chat.push({t:x.a,app:true});} stepIdx=t; go(STEPS[t].s); document.querySelectorAll('#steps li').forEach(li=>li.classList.toggle('now',+li.dataset.i===t));}};
+$('#reset').onclick=()=>{stopPlay();stepIdx=-1;state.chat=[];state.timerStart=null;state.crash=false;document.querySelectorAll('#steps li').forEach(li=>li.classList.remove('now'));go('H0');};
+function stopPlay(){clearTimeout(playTimer);playTimer=null;$('#play').textContent='자동 재생';}
+$('#play').onclick=()=>{
+  if(playTimer){stopPlay();return;}
+  $('#play').textContent='멈춤';
+  const loop=()=>{ if(stepIdx>=STEPS.length-1){stopPlay();return;} runStep(stepIdx+1); const x=STEPS[stepIdx]; const len=((x.a||'').length+(x.u||'').length); playTimer=setTimeout(loop,Math.max(2600,len*95)); };
+  if(stepIdx>=STEPS.length-1) stepIdx=-1; loop();
+};
+$('#steps').addEventListener('click',e=>{const li=e.target.closest('li'); if(!li) return; stopPlay(); const t=+li.dataset.i; state.chat=[]; for(let k=0;k<t;k++){const x=STEPS[k]; if(x.u)state.chat.push({t:x.u}); if(x.a&&x.s==='E1')state.chat.push({t:x.a,app:true});} runStep(t);});
+
+const J=[['H0','홈'],['H1','멀미 예보'],['H2','멀미 대응'],['H3','주의 모드'],['E1','응급 접수'],['E2','요약·119'],['E3','랑데부 비교'],['E4','접선 이동'],['E5','인계'],['E6','심정지 의심'],['E7','사고 감지'],['S1','가족 프로필']];
+$('#jumps').innerHTML=J.map(x=>`<button class="b" data-j="${x[0]}">${x[1]}</button>`).join('');
+$('#jumps').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; stopPlay(); if(b.dataset.j==='E1') state.chat=[]; go(b.dataset.j);});
+
+/* ---------- events & tabs ---------- */
+$('#ev-airbag').onclick=()=>{stopPlay();go('E7');};
+$('#ev-fever').onclick=()=>{stopPlay();go('H3');speak('숨쉬기 힘들어하거나 경련하나요? 가까운 곳 세 군데를 찾았어요.');};
+$('#ev-arrest').onclick=()=>{stopPlay();go('E6');speak('안전한 곳에 바로 멈추세요. 지금 119에 연결하세요.');};
+document.querySelectorAll('#p-sig input,#p-sig select').forEach(i=>i.addEventListener('input',()=>{updSignals(); if(['H0','H2'].includes(state.screen)) render();}));
+$('#sim-run').onclick=()=>{sim.run=!sim.run;$('#sim-run').textContent=sim.run?'일시 정지':'주행 시작'; if(sim.run) simLoop();};
+$('#sim-reset').onclick=()=>{Object.assign(sim,{t:0,...newFilt(),dose2:0,hist:[],cueAt:-99});updSignals(); if(['H0','H2'].includes(state.screen)) go('H0');};
+$('#misc').innerHTML=[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="b" data-misc="${n}">${n}</button>`).join('');
+$('#misc').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; const n=+b.dataset.misc, who=prm().who, D=msdv();
+  if(n>=4&&D>1){const prev=sim.personal[who]; sim.personal[who]=prev?Math.round((prev*0.6+D*0.4)*10)/10:Math.round(D*10)/10; $('#misc-note').textContent=`MISC ${n} 응답 · 누적 노출 ${D.toFixed(1)}에서 증상 → ${PROFILE[who].label} 개인 기준을 ${sim.personal[who]}로 보정했어요.`;}
+  else {$('#misc-note').textContent=`MISC ${n} 응답 기록 · 기준 유지 (${threshold().toFixed(0)})`;}
+  updSignals(); if(['H0','H2'].includes(state.screen)) render();});
+document.querySelectorAll('#p-rdv input').forEach(i=>i.addEventListener('input',updRdv));
+const tabs={'t-scn':'p-scn','t-sig':'p-sig','t-rdv':'p-rdv','t-ref':'p-ref'};
+Object.keys(tabs).forEach(t=>$('#'+t).addEventListener('click',()=>{Object.keys(tabs).forEach(k=>{$('#'+k).setAttribute('aria-selected',k===t);$('#'+tabs[k]).hidden=k!==t;}); drawChart();}));
+
+setInterval(()=>{const el=$('#timer'); if(el) el.textContent=elapsed(); if(state.screen==='E2'&&!state.sendCancel&&state.sendAt&&Date.now()-state.sendAt<4200) render();},1000);
+window.addEventListener('resize',()=>{drawMaps();drawChart();});
+updSignals(); updRdv(); go('H0');
+})();
+</script>

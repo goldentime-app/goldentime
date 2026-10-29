@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Vehicle SDK 조회 권한 — 실제 쓰는 도메인의 최소 권한만 (공식 가이드) -->
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />   <!-- 핸들각·브레이크 -->
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />   <!-- 착좌 -->
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />  <!-- 에어백 전개 -->
+
+    <!-- NaviHelper (경로·ETA·경유지) -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+
+    <!-- 응급실 실시간 병상 (공공데이터포털 API) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 위치·접선 지점 진입 감지 (FusedLocation) -->
+    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
+
+    <!-- 음성 접수(E1)·안내 — Pleos STT/TTS, 대체용 Android SpeechRecognizer -->
+    <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:label="골든타임"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="landscape">
+            <!-- 주행 중 사용 허용 (AAOS UX 제한) — 응급·멀미 케어는 주행 중이 본래 사용 상황.
+                 주행 중 화면 원칙(큰 글자 3영역, 목록 3개, 고정 응급 버튼)으로 산만성 최소화 -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

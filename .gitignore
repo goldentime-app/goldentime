@@ -1,0 +1,21 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.kotlin/
+shorts/
+pleos_docs/
+submission/*.docx
+*.apk
+__pycache__/
+# 내부 작업 메모 (공개 저장소 제외)
+HANDOFF.md
+CLAUDE.md
+PROGRESS.md
+keystore.properties
+!apk/*.apk
+submission/*.mp4
+submission/*.apk
+submission/build_docx.py
