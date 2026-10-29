@@ -10,7 +10,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.em
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,12 +64,12 @@ fun TopBar(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
-        Modifier.fillMaxWidth().height(56.dp).background(Color.Black.copy(alpha = 0.35f))
+        Modifier.fillMaxWidth().height(56.dp).background(Palette.Ground.copy(alpha = 0.72f))
             .padding(horizontal = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("골든타임", color = Palette.Ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+        Text("골든타임", color = Palette.Ink, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
         Box(
             Modifier.background(chipColor, RoundedCornerShape(50))
                 .padding(horizontal = 14.dp, vertical = 6.dp),
@@ -68,7 +77,7 @@ fun TopBar(
             Text(
                 mode,
                 color = if (chipColor == Palette.Alarm) Color.White else Palette.Ground,
-                fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
             )
         }
         Box(Modifier.weight(1f))
@@ -88,19 +97,37 @@ fun PanelCard(
     background: Color? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    var m = modifier
-        .background(
-            background ?: if (emergency) Palette.AlarmPanel else Palette.Panel,
-            RoundedCornerShape(20.dp),
-        )
-    if (borderColor != null) m = m.border(2.dp, borderColor, RoundedCornerShape(20.dp))
-    Column(m.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    // 선으로 가두지 않고 면의 밝기로 구분 (HIG deference) — 강조 카드는 강조색을 옅게 깐다
+    val base = background ?: if (emergency) Palette.AlarmPanel else Palette.Panel
+    val fill = borderColor?.let { it.copy(alpha = 0.16f).compositeOver(base) } ?: base
+    Column(
+        modifier.background(fill, RoundedCornerShape(CARD_RADIUS)).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp), content = content,
+    )
 }
 
-/** 카드 라벨 (오버라인) */
+/** 카드 모서리 — 큰 라운드로 물체처럼 */
+val CARD_RADIUS = 28.dp
+
+/** 카드 라벨 (아이브로) */
 @Composable
 fun CardTitle(text: String, color: Color = Palette.Ink2) {
-    Text(text, color = color, fontSize = GtType.Caption, fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp)
+    Text(text, color = color, fontSize = GtType.Caption, fontWeight = FontWeight.SemiBold)
+}
+
+/**
+ * 누르면 살짝 눌려 들어가는 물리감 (scale 0.96, 스프링 복귀). 리플 대신 쓰는 터치 피드백.
+ */
+fun Modifier.pressable(onClick: () -> Unit): Modifier = composed {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        if (pressed) 0.96f else 1f,
+        spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow),
+        label = "press",
+    )
+    this.graphicsLayer { scaleX = scale; scaleY = scale }
+        .clickable(interactionSource = source, indication = null, onClick = onClick)
 }
 
 /** 3/4 원호 게이지 — 숫자가 주인공 (지름의 40%) */
@@ -112,7 +139,7 @@ fun Gauge(percent: Int, color: Color, label: String, modifier: Modifier = Modifi
             val inset = stroke.width / 2
             val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
             drawArc(
-                Palette.Rule, startAngle = 135f, sweepAngle = 270f, useCenter = false,
+                Color.White.copy(alpha = 0.1f), startAngle = 135f, sweepAngle = 270f, useCenter = false,
                 topLeft = Offset(inset, inset), size = arcSize, style = stroke,
             )
             drawArc(
@@ -120,7 +147,7 @@ fun Gauge(percent: Int, color: Color, label: String, modifier: Modifier = Modifi
                 useCenter = false, topLeft = Offset(inset, inset), size = arcSize, style = stroke,
             )
         }
-        Text("$percent", color = Palette.Ink, fontSize = GtType.Display, fontWeight = FontWeight.Bold)
+        Text("$percent", color = Palette.Ink, fontSize = GtType.Display, fontWeight = FontWeight.Bold, letterSpacing = (-0.03).em)
         Text(
             label, color = Palette.Ink2, fontSize = 16.sp, lineHeight = 22.sp, textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
@@ -141,8 +168,8 @@ fun BigButton(
     Box(
         modifier
             .height(64.dp)
+            .pressable(onClick)
             .background(color, RoundedCornerShape(50))
-            .clickable(onClick = onClick)
             .padding(horizontal = 36.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -155,8 +182,8 @@ fun GhostButton(text: String, fontSize: Int = 17, modifier: Modifier = Modifier,
     Box(
         modifier
             .height(56.dp)
+            .pressable(onClick)
             .background(Palette.Panel2, RoundedCornerShape(50))
-            .clickable(onClick = onClick)
             .padding(horizontal = 28.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -259,7 +286,7 @@ fun CprBeatDots(modifier: Modifier = Modifier) {
 fun RendezvousTimeline(contact: Int, hospital: Int, maxMinutes: Int, accent: Color, modifier: Modifier = Modifier) {
     Canvas(modifier.fillMaxWidth().height(10.dp)) {
         val w = size.width
-        drawRoundRect(Palette.Rule, size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()))
+        drawRoundRect(Color.White.copy(alpha = 0.1f), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()))
         val hospW = w * (hospital.toFloat() / maxMinutes).coerceIn(0f, 1f)
         drawRoundRect(
             accent.copy(alpha = 0.35f),
@@ -400,7 +427,7 @@ fun MapPlaceholder(meetPoint: Boolean, modifier: Modifier = Modifier) {
 @Composable
 fun SeatIndicator(label: String, on: Boolean, modifier: Modifier = Modifier) {
     Column(
-        modifier.background(Palette.Panel2, RoundedCornerShape(12.dp)).padding(vertical = 16.dp, horizontal = 10.dp),
+        modifier.background(Palette.Panel2, RoundedCornerShape(16.dp)).padding(vertical = 16.dp, horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -431,11 +458,11 @@ fun ActionBar(
             hint?.let { Text(it, color = Palette.Ink2, fontSize = GtType.Caption) }
             Box(
                 Modifier.size(width = 216.dp, height = 64.dp)
-                    .background(Palette.Alarm, RoundedCornerShape(50))
-                    .clickable(onClick = onEmergency),
+                    .pressable(onEmergency)
+                    .background(Palette.Alarm, RoundedCornerShape(50)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("응급 모드", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("응급 모드", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -454,7 +481,6 @@ fun SeatMap(driver: Boolean, passenger: Boolean, rear: Boolean, modifier: Modifi
         val origin = Offset((w - body.width) / 2, (h - body.height) / 2)
         val r = CornerRadius(body.width * 0.28f)
         drawRoundRect(Palette.Panel2, topLeft = origin, size = body, cornerRadius = r)
-        drawRoundRect(Palette.Rule, topLeft = origin, size = body, cornerRadius = r, style = Stroke(width = 2.dp.toPx()))
         // 앞 유리 (진행 방향 = 위)
         drawLine(
             Palette.Rule, Offset(origin.x + body.width * 0.2f, origin.y + body.height * 0.2f),

@@ -16,9 +16,17 @@ import ai.seroai.goldentime.ui.screens.MeetNavScreen
 import ai.seroai.goldentime.ui.screens.MotionCareScreen
 import ai.seroai.goldentime.ui.screens.RendezvousScreen
 import ai.seroai.goldentime.ui.screens.Summary119Screen
+import ai.seroai.goldentime.ui.theme.GtMotion
+import ai.seroai.goldentime.ui.theme.GtType
 import ai.seroai.goldentime.ui.theme.Palette
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,13 +93,26 @@ fun GoldenTimeApp(state: AppState = remember { AppState() }) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
     val scale = (maxWidth / DESIGN_WIDTH).coerceAtLeast(1f)
     val base = LocalDensity.current
-    CompositionLocalProvider(LocalDensity provides Density(base.density * scale, base.fontScale)) {
+    CompositionLocalProvider(
+        LocalDensity provides Density(base.density * scale, base.fontScale),
+        LocalTextStyle provides LocalTextStyle.current.merge(GtType.Base),
+    ) {
     Column(Modifier.fillMaxSize().background(Palette.Ground)) {
         Box(
             Modifier.weight(1f).fillMaxWidth()
                 .background(if (state.screen.isEmergency) Palette.AlarmGround else Palette.Dash),
         ) {
-            when (state.screen) {
+            // 화면 전환 — 스프링 감속으로 살짝 커지며 나타나고, 이전 화면은 빠르게 사라진다
+            AnimatedContent(
+                targetState = state.screen,
+                transitionSpec = {
+                    (fadeIn(tween(GtMotion.ENTER_MS, easing = GtMotion.Enter)) +
+                        scaleIn(tween(GtMotion.ENTER_MS, easing = GtMotion.Enter), initialScale = 0.98f))
+                        .togetherWith(fadeOut(tween(160, easing = GtMotion.Standard)))
+                },
+                label = "screen",
+            ) { screen ->
+            when (screen) {
                 Screen.H0 -> HomeScreen(state)
                 Screen.H1 -> ForecastScreen(state, showToast)
                 Screen.H2 -> MotionCareScreen(state, showToast)
@@ -105,6 +126,7 @@ fun GoldenTimeApp(state: AppState = remember { AppState() }) {
                 Screen.E7 -> CrashDetectScreen(state)
                 Screen.S1 -> FamilyProfileScreen(state)
             }
+            }
             // 시연 바 토글: 상단 "골든타임" 제목을 길게 누르기 (기본은 숨김 — 제품 화면과 분리)
             Box(
                 Modifier.align(Alignment.TopStart).size(width = 150.dp, height = 56.dp)
@@ -114,11 +136,10 @@ fun GoldenTimeApp(state: AppState = remember { AppState() }) {
             if (toast.isNotEmpty()) {
                 Box(
                     Modifier.align(Alignment.TopCenter).padding(top = 64.dp)
-                        .background(Palette.Ground.copy(alpha = 0.92f), RoundedCornerShape(50))
-                        .border(1.dp, Palette.Rule, RoundedCornerShape(50))
-                        .padding(horizontal = 18.dp, vertical = 8.dp),
+                        .background(Palette.Panel2.copy(alpha = 0.94f), RoundedCornerShape(50))
+                        .padding(horizontal = 22.dp, vertical = 10.dp),
                 ) {
-                    Text(toast, color = Palette.Ink, fontSize = 16.sp)
+                    Text(toast, color = Palette.Ink, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }

@@ -149,7 +149,7 @@ fun Summary119Screen(state: AppState) {
                 )
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterVertically)) {
                     rows.forEachIndexed { i, (k, v) ->
-                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Palette.Rule.copy(alpha = 0.6f)))
+                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.08f)))
                         Row(Modifier.padding(vertical = 14.dp), verticalAlignment = Alignment.Top) {
                             Text(k, color = Palette.Ink2, fontSize = GtType.Body, modifier = Modifier.weight(0.26f))
                             Column(Modifier.weight(1f)) {
@@ -231,7 +231,7 @@ private fun SendStateCard(state: AppState, modifier: Modifier) {
                 }
                 is Send119Controller.State.Sent -> {
                     Text("✓ 119에 요약을 보냈어요", color = Palette.Calm, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text("전화 연결 중 · 상담원 질문에만 답하세요", color = Palette.AlarmText, fontSize = GtType.Body, fontWeight = FontWeight.SemiBold)
+                    Text("전화 연결 중 · 상담원 질문에만 답하세요", color = Palette.Ink, fontSize = GtType.Body, fontWeight = FontWeight.SemiBold)
                 }
                 is Send119Controller.State.Canceled -> {
                     Text("전송을 취소했어요", color = Palette.Ink, fontSize = GtType.H2, fontWeight = FontWeight.Bold)
@@ -462,7 +462,7 @@ fun HandoverScreen(state: AppState) {
     Column(Modifier.fillMaxSize()) {
         TopBar("응급", Palette.Alarm, driving = false)
         Row(Modifier.weight(1f).padding(24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            PanelCard(Modifier.weight(2.1f).fillMaxSize(), background = Palette.HandoverSurface, borderColor = Palette.Rule) {
+            PanelCard(Modifier.weight(2.1f).fillMaxSize(), background = Palette.HandoverSurface) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("구급대원 인계 정보", color = Palette.Ink, fontSize = GtType.Title, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text("차량에서 자동 정리 · 진단 아님", color = Palette.Ink2, fontSize = GtType.Caption)
@@ -475,7 +475,7 @@ fun HandoverScreen(state: AppState) {
                         "조치" to "옆으로 눕힘",
                         "병력·알레르기" to "열성경련 이력 · 알레르기 없음",
                     ).forEachIndexed { i, (k, v) ->
-                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Palette.Rule))
+                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.08f)))
                         Row(Modifier.heightIn(min = 72.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(k, color = Palette.Ink2, fontSize = GtType.Body, modifier = Modifier.width(132.dp))
                             Text(

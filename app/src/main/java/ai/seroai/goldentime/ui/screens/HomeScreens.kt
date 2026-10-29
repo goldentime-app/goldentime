@@ -194,8 +194,7 @@ private fun RouteCard(name: String, detail: String, msdv: Double, threshold: Dou
 private fun TurnCueBanner(cue: ai.seroai.goldentime.core.motion.TurnCue, modifier: Modifier = Modifier) {
     val left = cue.direction == ai.seroai.goldentime.data.navi.TurnDirection.LEFT
     Row(
-        modifier.background(Palette.Ground.copy(alpha = 0.92f), RoundedCornerShape(50))
-            .border(2.dp, Palette.Calm, RoundedCornerShape(50))
+        modifier.background(Palette.Panel2.copy(alpha = 0.94f), RoundedCornerShape(50))
             .padding(horizontal = 22.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
